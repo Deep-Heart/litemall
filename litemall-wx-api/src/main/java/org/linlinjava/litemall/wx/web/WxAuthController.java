@@ -166,7 +166,7 @@ public class WxAuthController {
         } else {
             user.setLastLoginTime(LocalDateTime.now());
             user.setLastLoginIp(IpUtil.client(request));
-            if(userService.updateById(user) == 0){
+            if (userService.updateById(user) == 0) {
                 return ResponseUtil.updatedDataFailed();
             }
         }
@@ -192,21 +192,21 @@ public class WxAuthController {
     @PostMapping("regCaptcha")
     public Object registerCaptcha(@RequestBody String body) {
         String phoneNumber = JacksonUtil.parseString(body, "mobile");
-        if(StringUtils.isEmpty(phoneNumber)){
+        if (StringUtils.isEmpty(phoneNumber)) {
             return ResponseUtil.badArgument();
         }
-        if(!RegexUtil.isMobileExact(phoneNumber)){
+        if (!RegexUtil.isMobileExact(phoneNumber)) {
             return ResponseUtil.badArgumentValue();
         }
 
-        if(notifyService.isSmsEnable()){
+        if (!notifyService.isSmsEnable()) {
             return ResponseUtil.fail(404, "小程序后台验证码服务不支持");
         }
         String code = CharUtil.getRandomNum(6);
         notifyService.notifySmsTemplate(phoneNumber, NotifyType.CAPTCHA, new String[]{code});
 
         boolean successful = CaptchaCodeManager.addToCache(phoneNumber, code);
-        if(!successful){
+        if (!successful) {
             return ResponseUtil.fail(404, "验证码未超时1分钟，不能发送");
         }
 
@@ -244,11 +244,11 @@ public class WxAuthController {
         String username = JacksonUtil.parseString(body, "username");
         String password = JacksonUtil.parseString(body, "password");
         String mobile = JacksonUtil.parseString(body, "mobile");
-        String captcha = JacksonUtil.parseString(body, "captcha");
         String code = JacksonUtil.parseString(body, "code");
+        String wxCode = JacksonUtil.parseString(body, "wxCode");
 
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password) || StringUtils.isEmpty(mobile)
-            || StringUtils.isEmpty(captcha) || StringUtils.isEmpty(code)) {
+                || StringUtils.isEmpty(wxCode) || StringUtils.isEmpty(code)) {
             return ResponseUtil.badArgument();
         }
 
@@ -272,23 +272,23 @@ public class WxAuthController {
 
         String openId = null;
         try {
-            WxMaJscode2SessionResult result = this.wxService.getUserService().getSessionInfo(code);
+            WxMaJscode2SessionResult result = this.wxService.getUserService().getSessionInfo(wxCode);
             openId = result.getOpenid();
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseUtil.fail(403, "openid 获取失败");
         }
         userList = userService.queryByOpenid(openId);
-        if(userList.size() > 1){
+        if (userList.size() > 1) {
             return ResponseUtil.fail(403, "openid 存在多个");
         }
-        if(userList.size() == 1){
-          LitemallUser checkUser = userList.get(0);
-          String checkUsername = checkUser.getUsername();
-          String checkPassword = checkUser.getPassword();
-          if(!checkUsername.equals(openId) || !checkPassword.equals(openId)){
-              return ResponseUtil.fail(403, "openid已绑定账号");
-          }
+        if (userList.size() == 1) {
+            LitemallUser checkUser = userList.get(0);
+            String checkUsername = checkUser.getUsername();
+            String checkPassword = checkUser.getPassword();
+            if (!checkUsername.equals(openId) || !checkPassword.equals(openId)) {
+                return ResponseUtil.fail(403, "openid已绑定账号");
+            }
         }
 
         LitemallUser user = null;
@@ -367,7 +367,7 @@ public class WxAuthController {
         String encodedPassword = encoder.encode(password);
         user.setPassword(encodedPassword);
 
-        if(userService.updateById(user) == 0){
+        if (userService.updateById(user) == 0) {
             return ResponseUtil.updatedDataFailed();
         }
 
@@ -383,7 +383,7 @@ public class WxAuthController {
         String phone = phoneNumberInfo.getPhoneNumber();
         LitemallUser user = userService.findById(userId);
         user.setMobile(phone);
-        if(userService.updateById(user) == 0){
+        if (userService.updateById(user) == 0) {
             return ResponseUtil.updatedDataFailed();
         }
         return ResponseUtil.ok();
